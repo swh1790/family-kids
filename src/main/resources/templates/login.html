@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('登录')}"></head>
+<body class="login-body">
+
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-12 col-sm-9 col-md-6 col-lg-4">
+
+            <!-- 复用统一的提示条：登录失败时 LoginController 把 error 放进 model -->
+            <div th:replace="~{fragments :: alerts}"></div>
+
+            <div class="card login-card">
+                <div class="card-body p-4 p-sm-5">
+                    <div class="text-center mb-4">
+                        <div class="login-logo">🏫</div>
+                        <h4 class="mb-1">家庭成长系统</h4>
+                        <small class="text-muted">家长或孩子，用各自的用户名登录</small>
+                    </div>
+
+                    <form method="post" th:action="@{/login}">
+                        <div class="mb-3">
+                            <label class="form-label" for="username">用户名</label>
+                            <input type="text" class="form-control" id="username" name="username"
+                                   th:value="${username}" autocomplete="username"
+                                   placeholder="家长：parent ／ 孩子：zifan、zihe" autofocus required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="password">密码</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                   autocomplete="current-password" placeholder="请输入密码" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">登 录</button>
+                    </form>
+                </div>
+            </div>
+
+            <p class="text-center text-muted small mt-3 mb-0">忘记密码请让爸爸妈妈重置～</p>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

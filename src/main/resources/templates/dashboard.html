@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('控制台')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 家长控制台</h2>
+        <form method="get" th:action="@{/}" class="d-flex">
+            <input type="date" name="date" class="form-control" th:value="${date}">
+            <button type="submit" class="btn btn-primary ms-2">切换</button>
+        </form>
+    </div>
+
+
+    <div class="row g-4">
+        <div class="col-md-6" th:each="c, cStat : ${children}">
+            <div class="card card-pet h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <th:block th:with="hasPhoto=${c.avatarUrl != null and !#strings.isEmpty(c.avatarUrl)}">
+                            <img th:if="${hasPhoto}" class="avatar-circle avatar-circle-sm me-3"
+                                 th:src="@{${c.avatarUrl}}" th:alt="${c.name}" alt="头像">
+                            <span th:unless="${hasPhoto}" class="child-avatar me-3" th:text="${c.avatar}">👦</span>
+                        </th:block>
+                        <div>
+                            <h4 class="mb-0" th:text="${c.name}">孩子</h4>
+                            <small class="text-muted" th:text="${c.grade}">年级</small>
+                        </div>
+                        <form method="post" th:action="@{/children/{id}/avatar(id=${c.id})}"
+                              enctype="multipart/form-data" class="ms-auto">
+                            <input type="file" name="file" accept="image/*" class="d-none"
+                                   th:id="'dashboard-avatar-input-' + ${c.id}" onchange="this.form.submit()">
+                            <label class="btn btn-sm btn-outline-primary mb-0"
+                                   th:for="'dashboard-avatar-input-' + ${c.id}">📷 换头像</label>
+                        </form>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="pet-avatar mb-2"
+                                 th:with="petCard = ${petCards != null ? petCards[cStat.index] : null}"
+                                 th:text="${petCard != null ? petCard.pet.avatar : '🥚'}">🥚</div>
+                        </div>
+                        <div class="col-8 text-start">
+                            <p class="mb-1">
+                                等级：<span class="fw-bold"
+                                          th:text="${petCard != null ? 'Lv' + petCard.level.level + ' ' + petCard.level.stageName : 'Lv1 灵蛋'}">Lv1</span>
+                            </p>
+                            <p class="mb-1">成长积分：<span class="fw-bold text-primary" th:text="${c.growthPoints}">0</span></p>
+                            <p class="mb-1">可用积分：<span class="fw-bold text-success" th:text="${c.balancePoints}">0</span></p>
+                            <div class="progress mb-1">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     th:style="'width:' + (${petCard != null ? petCard.progress : 0}) + '%'"
+                                     th:text="(${petCard != null ? petCard.progress : 0}) + '%'">0%</div>
+                            </div>
+                            <small class="text-muted"
+                                   th:text="'还需 ' + (${petCard != null ? petCard.nextExp : 60}) + ' 分升级'">还需 60 分</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mt-5 mb-3">📋 今日完成情况</h4>
+    <div class="table-responsive">
+        <table class="table table-hover bg-white rounded shadow-sm">
+            <thead class="table-light">
+            <tr>
+                <th>孩子</th>
+                <th>总任务</th>
+                <th>待审批</th>
+                <th>已通过</th>
+                <th>获得积分</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${summary}">
+                <td>
+                    <span th:text="${s.child_avatar}">👦</span>
+                    <span th:text="${s.child_name}">名字</span>
+                </td>
+                <td th:text="${s.total_tasks}">0</td>
+                <td th:text="${s.done_tasks}">0</td>
+                <td th:text="${s.approved_tasks}">0</td>
+                <td th:text="${s.earned_points}">0</td>
+                <td>
+                    <a th:href="@{/tasks(date=${date}, childId=${s.child_id})}" class="btn btn-sm btn-outline-primary">去审批</a>
+                    <a th:href="@{/kid/{id}(id=${s.child_id})}" class="btn btn-sm btn-outline-success">孩子端</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(summary)}">
+                <td colspan="6" class="text-center text-muted">今天还没有生成任务，点击上方“今日任务”生成。</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h4 class="mt-5 mb-3">💰 最近积分变动</h4>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover bg-white rounded shadow-sm">
+            <thead class="table-light">
+            <tr>
+                <th>时间</th>
+                <th>孩子</th>
+                <th>变动</th>
+                <th>原因</th>
+                <th>操作人</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${recentRecords}">
+                <td th:text="${#temporals.format(r.createdAt, 'MM-dd HH:mm')}">--</td>
+                <td>
+                    <span th:text="${r.childAvatar}">👦</span>
+                    <span th:text="${r.childName}">名字</span>
+                </td>
+                <td th:classappend="${r.changePoints >= 0 ? 'text-success' : 'text-danger'}"
+                    th:text="${r.changePoints >= 0 ? '+' : ''} + ${r.changePoints}">0</td>
+                <td th:text="${r.reason}">--</td>
+                <td th:text="${r.operator}">家长</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

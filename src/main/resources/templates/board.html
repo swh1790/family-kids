@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('客厅看板')}"></head>
+<body class="board-full">
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="m-0">🏠 家庭成长看板</h1>
+        <div class="fs-4" id="clock">--:--</div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6" th:each="card : ${petCards}">
+            <div class="board-card">
+                <div class="board-pet" th:text="${card.pet.avatar}">🥚</div>
+                <h2 th:text="${card.child.name}">孩子</h2>
+                <p class="fs-4">
+                    <span th:text="'Lv' + ${card.level.level} + ' ' + ${card.level.stageName}">Lv1</span>
+                    &nbsp;|&nbsp;
+                    <span th:text="'心情 ' + ${card.pet.mood} + '/100'">心情 80</span>
+                </p>
+                <div class="progress mb-3" style="height: 30px;">
+                    <div class="progress-bar bg-success fs-6" role="progressbar"
+                         th:style="'width:' + ${card.progress} + '%'"
+                         th:text="${card.progress} + '%'">0%</div>
+                </div>
+                <p class="mb-0">今日积分：<span class="fw-bold"
+                    th:text="${summaryMap[card.child.id] ?: 0}">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="board-card">
+                <h3 class="mb-3">最近动态</h3>
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="badge bg-light text-dark p-2 fs-5" th:each="r : ${recentRecords}">
+                        <span th:text="${r.childAvatar}">👦</span>
+                        <span th:text="${r.childName}">名字</span>
+                        <span th:classappend="${r.changePoints >= 0 ? 'text-success' : 'text-danger'}"
+                              th:text="${r.changePoints >= 0 ? '+' : ''} + ${r.changePoints}">0</span>
+                        <small th:text="${r.reason}">原因</small>
+                    </div>
+                    <div th:if="${#lists.isEmpty(recentRecords)}" class="text-muted">暂无动态</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+
+<script>
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').textContent =
+            String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+    setTimeout(() => location.reload(), 60000);
+</script>
+</body>
+</html>

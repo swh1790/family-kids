@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('灵宠详情')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-pet text-center p-4">
+                <h3>
+                    <span th:text="${card.child.avatar}">👦</span>
+                    <span th:text="${card.child.name}">孩子</span> 的灵宠
+                </h3>
+                <div class="pet-avatar-lg my-4" th:text="${card.pet.avatar}">🥚</div>
+                <h2 th:text="${card.pet.name}">小火龙</h2>
+                <p class="fs-4">
+                    <span class="badge bg-primary" th:text="'Lv' + ${card.level.level} + ' ' + ${card.level.stageName}">Lv1</span>
+                </p>
+                <p>成长积分：<span class="fw-bold text-primary" th:text="${card.child.growthPoints}">0</span>
+                    / 下一级还需 <span class="fw-bold" th:text="${card.nextExp}">0</span> 分</p>
+                <div class="progress mb-3" style="height: 24px;">
+                    <div class="progress-bar progress-bar-striped bg-success" role="progressbar"
+                         th:style="'width:' + ${card.progress} + '%'"
+                         th:text="${card.progress} + '%'">0%</div>
+                </div>
+                <p>心情值：<span class="fw-bold" th:text="${card.pet.mood}">80</span>/100</p>
+                <div class="progress mb-4" style="height: 12px;">
+                    <div class="progress-bar bg-warning" role="progressbar"
+                         th:style="'width:' + ${card.pet.mood} + '%'"></div>
+                </div>
+                <a th:href="@{/pets}" class="btn btn-outline-primary">返回灵宠列表</a>
+            </div>
+
+            <h4 class="mt-5 mb-3">📜 灵宠大事记</h4>
+            <ul class="list-group shadow-sm">
+                <li class="list-group-item" th:each="log : ${card.logs}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1" th:text="${log.title}">事件</h6>
+                        <small th:text="${#temporals.format(log.createdAt, 'MM-dd HH:mm')}">--</small>
+                    </div>
+                    <p class="mb-1 text-muted" th:text="${log.detail}">详情</p>
+                </li>
+                <li class="list-group-item text-center text-muted" th:if="${#lists.isEmpty(card.logs)}">
+                    还没有大事记，快去做任务吧！
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

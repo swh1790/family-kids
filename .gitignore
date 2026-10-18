@@ -1,0 +1,29 @@
+# ===== 构建产物 =====
+target/
+BOOT-INF/
+*.jar
+*.war
+
+# ===== 日志（运行时产生，且每次重启截断）=====
+*.log
+
+# ===== 孩子头像等上传内容（含真实照片，属隐私，不入库）=====
+uploads/avatars/*
+!uploads/avatars/.gitkeep
+
+# ===== IDE =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+
+# ===== 系统 =====
+.DS_Store
+Thumbs.db
+
+# ===== 临时文件 =====
+*.tmp
+*.bak
+*~

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('习惯扣分')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <h2 class="mb-4">😤 坏习惯记录</h2>
+
+
+    <div class="row g-4">
+        <div class="col-md-6" th:each="c : ${children}">
+            <div class="card card-pet">
+                <div class="card-body">
+                    <h4 class="mb-3">
+                        <span th:text="${c.avatar}">👦</span>
+                        <span th:text="${c.name}">孩子</span>
+                    </h4>
+                    <form method="post" th:action="@{/habits/deduct}" class="row g-2">
+                        <input type="hidden" name="childId" th:value="${c.id}">
+                        <div class="col-8">
+                            <select name="habitId" class="form-select" required>
+                                <option th:each="h : ${habits}" th:value="${h.id}"
+                                        th:text="${h.icon} + ' ' + ${h.name} + ' (' + ${h.points} + '分)'">习惯</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <button type="submit" class="btn btn-danger w-100">记录</button>
+                        </div>
+                        <div class="col-12">
+                            <input type="text" name="reason" class="form-control" placeholder="补充说明（可选）">
+                        </div>
+                    </form>
+                    <hr>
+                    <p class="mb-0 text-muted">当前可用积分：<span class="fw-bold text-success" th:text="${c.balancePoints}">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mt-5 mb-3">扣分项说明</h4>
+    <div class="row g-3">
+        <div class="col-md-3 col-6" th:each="h : ${habits}">
+            <div class="card text-center p-3">
+                <div class="fs-1" th:text="${h.icon}">🐌</div>
+                <div th:text="${h.name}">拖延磨蹭</div>
+                <div class="text-danger fw-bold" th:text="${h.points} + '分'">-3分</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

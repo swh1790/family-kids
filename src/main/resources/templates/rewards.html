@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('奖励商城')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <h2 class="mb-4">🎁 奖励商城</h2>
+
+
+    <div class="row g-3 mb-5">
+        <div class="col-md-3 col-6" th:each="it : ${items}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2" th:text="${it.icon}">🎁</div>
+                    <h5 th:text="${it.name}">奖励</h5>
+                    <p class="text-muted small" th:text="${it.description}">说明</p>
+                    <p class="fw-bold text-primary" th:text="${it.costPoints} + ' 积分'">100 积分</p>
+                    <form method="post" th:action="@{/rewards/claim}">
+                        <input type="hidden" name="rewardId" th:value="${it.id}">
+                        <select name="childId" class="form-select form-select-sm mb-2" required>
+                            <option th:each="c : ${children}" th:value="${c.id}" th:text="${c.name}">孩子</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">兑换</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mb-3">兑换记录</h4>
+    <div class="table-responsive bg-white rounded shadow-sm">
+        <table class="table table-hover">
+            <thead class="table-light">
+            <tr>
+                <th>时间</th>
+                <th>孩子</th>
+                <th>奖励</th>
+                <th>消耗积分</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${claims}">
+                <td th:text="${#temporals.format(c.createdAt, 'MM-dd HH:mm')}">--</td>
+                <td>
+                    <span th:text="${c.childAvatar}">👦</span>
+                    <span th:text="${c.childName}">名字</span>
+                </td>
+                <td><span th:text="${c.rewardIcon}"></span> <span th:text="${c.rewardName}"></span></td>
+                <td th:text="${c.costPoints}">0</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${c.status == 'PENDING' ? 'bg-warning text-dark' : (c.status == 'GRANTED' ? 'bg-success' : 'bg-danger')}"
+                          th:text="${c.status == 'PENDING' ? '待兑现' : (c.status == 'GRANTED' ? '已兑现' : '已拒绝')}">状态</span>
+                </td>
+                <td>
+                    <form th:action="@{/rewards/claim/{id}/grant(id=${c.id})}" method="post" class="d-inline" th:if="${c.status == 'PENDING'}">
+                        <button type="submit" class="btn btn-sm btn-success">确认兑现</button>
+                    </form>
+                    <form th:action="@{/rewards/claim/{id}/reject(id=${c.id})}" method="post" class="d-inline" th:if="${c.status == 'PENDING'}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">拒绝</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h4 class="mt-5 mb-3">管理奖励目录</h4>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" th:action="@{/rewards/save}" th:object="${item}">
+                <input type="hidden" th:field="*{id}">
+                <div class="row g-2">
+                    <div class="col-md-3"><input type="text" th:field="*{name}" class="form-control" placeholder="名称" required></div>
+                    <div class="col-md-3"><input type="text" th:field="*{description}" class="form-control" placeholder="说明"></div>
+                    <div class="col-md-2"><input type="text" th:field="*{icon}" class="form-control" placeholder="图标emoji"></div>
+                    <div class="col-md-2"><input type="number" th:field="*{costPoints}" class="form-control" placeholder="积分" required></div>
+                    <div class="col-md-2"><input type="number" th:field="*{stock}" class="form-control" placeholder="库存(-1不限)"></div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">保存奖励</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

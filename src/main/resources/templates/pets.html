@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('灵宠')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <h2 class="mb-4">🐉 灵宠成长</h2>
+
+    <div class="row g-4">
+        <div class="col-md-6" th:each="c : ${children}">
+            <div class="card card-pet h-100 text-center">
+                <div class="card-body">
+                    <div class="pet-avatar mb-3" th:text="${c.avatar}">👦</div>
+                    <h4 th:text="${c.name}">孩子</h4>
+                    <p class="text-muted" th:text="${c.grade}">年级</p>
+                    <a th:href="@{/pets/{id}(id=${c.id})}" class="btn btn-primary">查看灵宠</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mt-5 mb-3">等级与奖励表</h4>
+    <div class="table-responsive bg-white rounded shadow-sm">
+        <table class="table table-hover">
+            <thead class="table-light">
+            <tr>
+                <th>等级</th>
+                <th>阶段</th>
+                <th>所需成长值</th>
+                <th>解锁奖励</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="lv : ${levels}">
+                <td th:text="'Lv' + ${lv.level}">Lv1</td>
+                <td><span class="fs-4" th:text="${lv.icon}"></span> <span th:text="${lv.stageName}"></span></td>
+                <td th:text="${lv.minExp}">0</td>
+                <td>
+                    <strong th:text="${lv.rewardTitle}"></strong>
+                    <p class="mb-0 text-muted small" th:text="${lv.rewardDesc}"></p>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('积分流水')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <h2 class="mb-4">💰 积分流水</h2>
+
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">手动调整积分</h5>
+                    <form method="post" th:action="@{/points/adjust}">
+                        <div class="mb-3">
+                            <label class="form-label">孩子</label>
+                            <select name="childId" class="form-select" required>
+                                <option th:each="c : ${children}" th:value="${c.id}" th:text="${c.name}">孩子</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">积分（正数加分，负数扣分）</label>
+                            <input type="number" name="points" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">原因</label>
+                            <input type="text" name="reason" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">提交</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="table-responsive bg-white rounded shadow-sm">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th>时间</th>
+                        <th>孩子</th>
+                        <th>变动</th>
+                        <th>可用余额</th>
+                        <th>成长值</th>
+                        <th>类型</th>
+                        <th>原因</th>
+                        <th>操作人</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${records}">
+                        <td th:text="${#temporals.format(r.createdAt, 'MM-dd HH:mm')}">--</td>
+                        <td>
+                            <span th:text="${r.childAvatar}">👦</span>
+                            <span th:text="${r.childName}">名字</span>
+                        </td>
+                        <td th:classappend="${r.changePoints >= 0 ? 'text-success' : 'text-danger'}"
+                            th:text="${r.changePoints >= 0 ? '+' : ''} + ${r.changePoints}">0</td>
+                        <td th:text="${r.balanceAfter}">0</td>
+                        <td th:text="${r.growthAfter}">0</td>
+                        <td th:text="${r.type}">EARN</td>
+                        <td th:text="${r.reason}">--</td>
+                        <td th:text="${r.operator}">家长</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

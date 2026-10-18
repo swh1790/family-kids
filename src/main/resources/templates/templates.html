@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('任务模板')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <h2 class="mb-4">📚 任务模板</h2>
+
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">新增/编辑模板</h5>
+                    <form method="post" th:action="@{/tasks/templates/save}" th:object="${template}">
+                        <input type="hidden" th:field="*{id}">
+                        <div class="mb-3">
+                            <label class="form-label">适用孩子（空为通用）</label>
+                            <select th:field="*{childId}" class="form-select">
+                                <option value="">通用</option>
+                                <option th:each="c : ${children}" th:value="${c.id}" th:text="${c.name}">孩子</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">分类</label>
+                            <select th:field="*{categoryId}" class="form-select" required>
+                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">分类</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">任务名称</label>
+                            <input type="text" th:field="*{title}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">说明</label>
+                            <input type="text" th:field="*{description}" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">默认积分</label>
+                            <input type="number" th:field="*{defaultPoints}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">频次</label>
+                            <select th:field="*{frequency}" class="form-select">
+                                <option value="DAILY">每天</option>
+                                <option value="WEEKLY">每周指定天</option>
+                                <option value="ONCE">一次性</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">指定星期（1-7 逗号分隔，空为每天）</label>
+                            <input type="text" th:field="*{weekdays}" class="form-control" placeholder="如 1,2,3,4,5">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" th:field="*{requireApproval}" class="form-check-input">
+                            <label class="form-check-label">需要家长审批</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" th:field="*{active}" class="form-check-input" checked>
+                            <label class="form-check-label">启用</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="table-responsive bg-white rounded shadow-sm">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th>分类</th>
+                        <th>名称</th>
+                        <th>积分</th>
+                        <th>频次</th>
+                        <th>适用</th>
+                        <th>审批</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${templates}">
+                        <td><span th:text="${t.categoryIcon}"></span> <span th:text="${t.categoryName}"></span></td>
+                        <td th:text="${t.title}"></td>
+                        <td th:text="${t.defaultPoints}"></td>
+                        <td th:text="${t.frequency == 'DAILY' ? '每天' : (t.frequency == 'WEEKLY' ? '每周' : '一次')}"></td>
+                        <td th:text="${t.childName != null ? t.childName : '通用'}"></td>
+                        <td th:text="${t.requireApproval ? '是' : '否'}"></td>
+                        <td>
+                            <form th:action="@{/tasks/templates/{id}/delete(id=${t.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

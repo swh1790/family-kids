@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.family.kids.mapper.ReportMapper">
+
+    <!-- 某日各孩子任务完成情况 -->
+    <select id="dailySummary" resultType="java.util.HashMap">
+        SELECT c.id AS child_id,
+               c.name AS child_name,
+               c.avatar AS child_avatar,
+               COUNT(i.id) FILTER (WHERE i.id IS NOT NULL) AS total_tasks,
+               COUNT(i.id) FILTER (WHERE i.status = 'DONE') AS done_tasks,
+               COUNT(i.id) FILTER (WHERE i.status = 'APPROVED') AS approved_tasks,
+               COUNT(i.id) FILTER (WHERE i.status = 'PENDING') AS pending_tasks,
+               COALESCE(SUM(i.points) FILTER (WHERE i.status = 'APPROVED'), 0) AS earned_points
+        FROM child c
+        LEFT JOIN task_instance i ON i.child_id = c.id AND i.plan_date = #{planDate}
+        WHERE c.active = TRUE
+        GROUP BY c.id, c.name, c.avatar
+        ORDER BY c.id
+    </select>
+
+    <!-- 日期区间内各孩子每日获得积分 -->
+    <select id="weeklyPoints" resultType="java.util.HashMap">
+        SELECT DATE(d.day) AS day,
+               c.id AS child_id,
+               c.name AS child_name,
+               COALESCE(SUM(pr.change_points) FILTER (WHERE pr.type = 'EARN'), 0) AS earned
+        FROM generate_series(#{startDate}::date, #{endDate}::date, interval '1 day') AS d(day)
+        CROSS JOIN child c
+        LEFT JOIN point_record pr ON pr.child_id = c.id AND DATE(pr.created_at) = DATE(d.day)
+        WHERE c.active = TRUE
+        GROUP BY d.day, c.id, c.name
+        ORDER BY d.day, c.id
+    </select>
+
+    <!-- 日期区间内各分类获得积分 -->
+    <select id="categoryPoints" resultType="java.util.HashMap">
+        SELECT cat.id AS category_id,
+               cat.name AS category_name,
+               cat.icon AS category_icon,
+               cat.color AS category_color,
+               COALESCE(SUM(i.points), 0) AS total_points
+        FROM task_category cat
+        LEFT JOIN task_instance i ON i.category_id = cat.id
+                                 AND i.plan_date BETWEEN #{startDate} AND #{endDate}
+                                 AND i.status = 'APPROVED'
+        GROUP BY cat.id, cat.name, cat.icon, cat.color
+        ORDER BY cat.sort_order
+    </select>
+
+</mapper>

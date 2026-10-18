@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('孩子打卡')}"></head>
+<body class="bg-light">
+<nav th:replace="~{fragments :: kidnav}"></nav>
+
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <div class="row g-4 align-items-start">
+        <!-- 左侧：个人信息 + 灵宠（融合） -->
+        <div class="col-lg-4">
+            <div class="card kid-profile-card text-center sticky-top">
+                <div class="card-body" th:with="hasPhoto=${child.avatarUrl != null and !#strings.isEmpty(child.avatarUrl)}">
+                    <div class="avatar-wrap mb-3">
+                        <img th:if="${hasPhoto}" class="avatar-circle avatar-circle-lg"
+                             th:src="@{${child.avatarUrl}}" th:alt="${child.name}" alt="头像">
+                        <span th:unless="${hasPhoto}" class="child-avatar" th:text="${child.avatar}">👦</span>
+                        <label class="avatar-edit-badge" th:for="'avatar-input-' + ${child.id}" title="换一张头像">📷</label>
+                    </div>
+                    <form method="post" th:action="@{/kid/{id}/avatar(id=${child.id})}" enctype="multipart/form-data">
+                        <input type="file" name="file" accept="image/*" class="d-none"
+                               th:id="'avatar-input-' + ${child.id}" onchange="this.form.submit()">
+                    </form>
+
+                    <h3 class="mb-1" th:text="${child.name}">孩子</h3>
+                    <p class="text-muted mb-3" th:text="${child.grade}">年级</p>
+
+                    <div class="d-flex justify-content-center gap-3 mb-4">
+                        <div class="profile-stat">
+                            <div class="text-success fw-bold" th:text="${child.balancePoints}">0</div>
+                            <small class="text-muted">可用积分</small>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="text-primary fw-bold" th:text="${child.growthPoints}">0</div>
+                            <small class="text-muted">成长积分</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="pet-section">
+                        <div class="pet-avatar" th:text="${petCard.pet.avatar}">🥚</div>
+                        <p class="mb-1 fw-bold"
+                           th:text="'Lv' + ${petCard.level.level} + ' ' + ${petCard.level.stageName}">Lv1 灵蛋</p>
+                        <div class="progress mb-2 mx-auto" style="max-width: 220px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 th:style="'width:' + ${petCard.progress} + '%'"
+                                 th:text="${petCard.progress} + '%'">0%</div>
+                        </div>
+                        <small class="text-muted" th:text="'还需 ' + ${petCard.nextExp} + ' 分升级'">还需 60 分升级</small>
+                    </div>
+
+                    <a th:if="${loginUser != null and loginUser.role == 'PARENT'}" th:href="@{/}"
+                       class="btn btn-outline-secondary w-100 mt-4">返回控制台</a>
+                    <a th:unless="${loginUser != null and loginUser.role == 'PARENT'}" th:href="@{/logout}"
+                       class="btn btn-outline-secondary w-100 mt-4">退出登录</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：今日任务按分类展示 -->
+        <div class="col-lg-8">
+            <h4 class="mb-3">📋 今日任务</h4>
+
+            <th:block th:if="${groupedTasks != null and !groupedTasks.isEmpty()}">
+                <div th:each="entry : ${groupedTasks}" class="task-section mb-4">
+                    <div class="task-section-header"
+                         th:with="icon=${entry.value[0].categoryIcon},color=${entry.value[0].categoryColor}">
+                        <span class="task-section-icon" th:style="'background-color:' + ${color != null ? color + '20' : '#e9ecef'}"
+                              th:text="${icon != null ? icon : '📋'}">📚</span>
+                        <span class="task-section-title" th:text="${entry.key}">分类</span>
+                        <span class="ms-auto d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill task-section-count"
+                                  th:text="${entry.value.size()} + ' 项'">0 项</span>
+                            <span th:if="${pendingCounts[entry.key] != null and pendingCounts[entry.key] > 0}"
+                                  class="text-danger fw-bold small"
+                                  th:text="'未完成 ' + ${pendingCounts[entry.key]} + ' 项'">未完成 0 项</span>
+                        </span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6 col-xl-4" th:each="t : ${entry.value}">
+                            <div class="card kid-task-card shadow-sm"
+                                 th:classappend="${t.status == 'APPROVED' ? 'bg-success text-white' :
+                                                  (t.status == 'DONE' ? 'bg-warning' :
+                                                  (t.status == 'REJECTED' ? 'bg-danger text-white' : 'bg-white'))}">
+                                <div class="fs-1" th:text="${t.categoryIcon}">📚</div>
+                                <div class="fw-bold mt-2" th:text="${t.title}">任务</div>
+                                <div class="text-muted small" th:text="'+' + ${t.points} + ' 分'">+5</div>
+                                <form th:if="${t.status == 'PENDING'}" method="post" th:action="@{/tasks/{id}/submit(id=${t.id})}" class="mt-2">
+                                    <input type="hidden" name="redirect" value="kid">
+                                    <button type="submit" class="btn btn-primary btn-lg">我完成了 ✅</button>
+                                </form>
+                                <div th:if="${t.status == 'DONE'}" class="mt-2 badge bg-dark">等待家长确认</div>
+                                <div th:if="${t.status == 'APPROVED'}" class="mt-2">已完成 🎉</div>
+                                <div th:if="${t.status == 'REJECTED'}" class="mt-2">被驳回</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+
+            <div class="text-center text-muted py-5" th:if="${tasks == null or #lists.isEmpty(tasks)}">
+                今天还没有任务哦~
+            </div>
+
+            <!-- 扣分提醒：规则清单 + 最近记录 -->
+            <div class="deduct-section mt-5" th:if="${habitItems != null and !habitItems.isEmpty()}">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="fs-4">⚠️</span>
+                    <h4 class="mb-0">注意啦！这些事会扣分</h4>
+                    <span class="ms-auto text-danger fw-bold small"
+                          th:if="${child.deductedPoints != null and child.deductedPoints > 0}"
+                          th:text="'累计已被扣 ' + ${child.deductedPoints} + ' 分'">累计已被扣 0 分</span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-4 col-xl-3" th:each="h : ${habitItems}">
+                        <div class="card habit-warning-card h-100 text-center p-3">
+                            <div class="fs-1 mb-2" th:text="${h.icon}">🐌</div>
+                            <div class="fw-bold small" th:text="${h.name}">拖延磨蹭</div>
+                            <div class="text-danger fw-bold small" th:text="${h.points} + ' 分'">-3 分</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-deduct-card" th:if="${recentDeductions != null and !recentDeductions.isEmpty()}">
+                    <h5 class="mb-3 text-danger fw-bold">📋 最近被扣分记录</h5>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0"
+                             th:each="r : ${recentDeductions}">
+                            <div>
+                                <div class="fw-bold small" th:text="${r.reason != null ? r.reason : '坏习惯扣分'}">原因</div>
+                                <div class="text-muted smaller"
+                                     th:text="${#temporals.format(r.createdAt, 'MM-dd HH:mm')}">10-18 17:30</div>
+                            </div>
+                            <span class="badge rounded-pill bg-danger"
+                                  th:text="${r.changePoints} + ' 分'">-5 分</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success-soft mt-3" th:if="${recentDeductions == null or recentDeductions.isEmpty()}">
+                    🎉 太棒了！最近没有被扣分，继续保持哦～
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

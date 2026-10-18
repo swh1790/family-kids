@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('统计报表')}"></head>
+<body>
+<nav th:replace="~{fragments :: appNav}"></nav>
+<div th:replace="~{fragments :: alerts}"></div>
+
+<div class="container py-4">
+    <h2 class="mb-4">📈 统计报表</h2>
+
+    <form method="get" th:action="@{/report}" class="row g-2 mb-4">
+        <div class="col-auto">
+            <input type="date" name="start" class="form-control" th:value="${start}">
+        </div>
+        <div class="col-auto">
+            <input type="date" name="end" class="form-control" th:value="${end}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">查询</button>
+        </div>
+    </form>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm p-3">
+                <h5 class="mb-3">每日获得积分趋势</h5>
+                <canvas id="trendChart" height="120"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm p-3">
+                <h5 class="mb-3">任务分类积分占比</h5>
+                <canvas id="categoryChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mt-5 mb-3">周报明细</h4>
+    <div class="table-responsive bg-white rounded shadow-sm">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+            <tr>
+                <th>日期</th>
+                <th>孩子</th>
+                <th>获得积分</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${weeklyPoints}">
+                <td th:text="${row.day}">2026-01-01</td>
+                <td th:text="${row.child_name}">孩子</td>
+                <td th:text="${row.earned}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:replace="~{fragments :: scripts}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const weeklyData = /*[[${weeklyPoints}]]*/ [];
+    const categoryData = /*[[${categoryPoints}]]*/ [];
+    const childrenNames = [...new Set(weeklyData.map(r => r.child_name))];
+
+    // 趋势图（配色沿用主题：柔和蓝 / 薄荷绿）
+    const labels = [...new Set(weeklyData.map(r => r.day))];
+    const palette = [
+        { line: '#5B7CFA', fill: 'rgba(91,124,250,0.14)' },
+        { line: '#2BC48A', fill: 'rgba(43,196,138,0.14)' },
+        { line: '#FFA94D', fill: 'rgba(255,169,77,0.14)' },
+        { line: '#B197FC', fill: 'rgba(177,151,252,0.14)' }
+    ];
+    const datasets = childrenNames.map((name, idx) => {
+        const c = palette[idx % palette.length];
+        return {
+            label: name,
+            data: labels.map(day => {
+                const row = weeklyData.find(r => r.day === day && r.child_name === name);
+                return row ? Number(row.earned) : 0;
+            }),
+            borderColor: c.line,
+            backgroundColor: c.fill,
+            pointBackgroundColor: c.line,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.35
+        };
+    });
+
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 16 } }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(27,33,48,0.06)', drawBorder: false }, ticks: { precision: 0 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 分类图
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: categoryData.map(r => r.category_name),
+            datasets: [{
+                data: categoryData.map(r => Number(r.total_points)),
+                backgroundColor: categoryData.map((r, i) =>
+                    r.category_color || ['#5B7CFA', '#2BC48A', '#FFA94D', '#B197FC', '#4DC9F6', '#FF6B6B'][i % 6]),
+                borderColor: '#fff',
+                borderWidth: 3,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '62%',
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 14 } }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+</body>
+</html>
